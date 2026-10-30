@@ -1,0 +1,822 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Termómetro de colores</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+/* Concepto: carta de muestras de pintura. El participante "elige su muestra";
+   el tablero arma un mosaico vivo con las muestras de todo el equipo. */
+:root {
+  --paper: #F6F4EF;
+  --paper-2: #ECE8DF;
+  --card: #FFFFFF;
+  --ink: #1C1F1D;
+  --ink-soft: #5B605B;
+  --line: #DCD6CA;
+  --tint: #F6F4EF;
+  --tint-amt: 18%;
+  --c-verde: #2F9D63;
+  --c-amarillo: #F2C230;
+  --c-azul: #3C6FD1;
+  --c-gris: #8E959B;
+  --c-naranja: #EE7A2F;
+  --c-rojo: #D9433B;
+  --g-apertura: #2F9D63;
+  --g-cautela: #3C6FD1;
+  --g-tension: #E2592F;
+  --display: 'Bricolage Grotesque', 'Trebuchet MS', Arial, sans-serif;
+  --body: 'Figtree', 'Helvetica Neue', Arial, sans-serif;
+  --ease: cubic-bezier(.2, .8, .2, 1.1);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #161917;
+    --paper-2: #202421;
+    --card: #232825;
+    --ink: #F1F2EE;
+    --ink-soft: #AEB4AD;
+    --line: #353B37;
+    --tint: #161917;
+    --tint-amt: 7%;
+    color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: color-mix(in srgb, var(--tint) var(--tint-amt), var(--paper));
+  color: var(--ink);
+  font: 17px/1.5 var(--body);
+  min-height: 100vh;
+  transition: background-color .6s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+h1, h2, h3 { font-family: var(--display); line-height: 1.04; margin: 0; text-wrap: balance; letter-spacing: -0.02em; }
+p { margin: 0; }
+button { font: inherit; color: inherit; cursor: pointer; }
+:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+[hidden] { display: none !important; }
+
+/* ===================== PARTICIPANTE ===================== */
+#participante {
+  max-width: 560px; margin: 0 auto;
+  padding-left: max(18px, env(safe-area-inset-left, 0px));
+  padding-right: max(18px, env(safe-area-inset-right, 0px));
+  padding-block: max(18px, env(safe-area-inset-top, 0px)) max(36px, env(safe-area-inset-bottom, 0px));
+  min-height: 100vh; display: flex; flex-direction: column;
+}
+.topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-block: 6px 18px; }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 14px; letter-spacing: .02em; }
+.brand-chips { display: flex; }
+.brand-chips i { width: 10px; height: 18px; border-radius: 3px; margin-right: -3px; border: 2px solid var(--paper); }
+.dots { display: flex; gap: 6px; }
+.dots span { width: 8px; height: 8px; border-radius: 50%; background: var(--line); transition: all .4s var(--ease); }
+.dots span.on { width: 22px; border-radius: 4px; background: var(--ink); }
+
+.step { display: flex; flex-direction: column; gap: 20px; flex: 1; animation: enter .55s var(--ease) both; }
+@keyframes enter { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+.kicker { font-size: 13px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-soft); }
+.step h1 { font-size: clamp(32px, 9vw, 44px); font-weight: 800; }
+.lead { color: var(--ink-soft); font-size: 17px; }
+
+/* Abanico de muestras en la portada */
+.fan { position: relative; height: 250px; margin: 6px 0 4px; }
+.fan .chip-mini {
+  position: absolute; left: 50%; bottom: 0; width: 92px; height: 210px; border-radius: 14px;
+  background: var(--card); box-shadow: 0 10px 24px rgba(20, 24, 22, .16); overflow: hidden;
+  transform-origin: 50% 100%; transform: translateX(-50%) rotate(var(--r));
+  animation: fanIn .9s var(--ease) both; animation-delay: var(--d);
+}
+.fan .chip-mini::before { content: ""; position: absolute; inset: 0 0 46px; background: var(--c); }
+.fan .chip-mini span { position: absolute; left: 10px; bottom: 12px; font-size: 11px; font-weight: 700; color: #3a3f3b; }
+@keyframes fanIn { from { transform: translateX(-50%) rotate(0deg); opacity: 0; } to { transform: translateX(-50%) rotate(var(--r)); opacity: 1; } }
+.fan:hover .chip-mini { transform: translateX(-50%) rotate(calc(var(--r) * 1.25)); transition: transform .5s var(--ease); }
+
+.privacy { display: flex; gap: 10px; align-items: flex-start; font-size: 15px; color: var(--ink-soft); background: var(--paper-2); border-radius: 14px; padding: 12px 14px; }
+.privacy svg { flex: none; margin-top: 2px; }
+
+.cta {
+  margin-top: auto; display: flex; align-items: center; justify-content: center; gap: 10px;
+  background: var(--ink); color: var(--paper); border: 0; border-radius: 999px;
+  padding: 18px 26px; font-weight: 700; font-size: 18px; width: 100%;
+  box-shadow: 0 8px 20px rgba(20, 24, 22, .18); transition: transform .2s var(--ease), opacity .2s;
+}
+.cta:active { transform: scale(.97); }
+.cta:disabled { opacity: .25; box-shadow: none; cursor: not-allowed; }
+.cta svg { transition: transform .3s var(--ease); }
+.cta:not(:disabled):hover svg { transform: translateX(4px); }
+.link { background: none; border: 0; color: var(--ink-soft); text-decoration: underline; text-underline-offset: 3px; padding: 6px; align-self: center; }
+
+/* Áreas */
+.areas { display: grid; gap: 12px; }
+.area {
+  display: flex; align-items: center; gap: 16px; text-align: left; width: 100%;
+  background: var(--card); border: 2px solid transparent; border-radius: 18px; padding: 18px;
+  box-shadow: 0 2px 0 var(--line); transition: transform .25s var(--ease), border-color .2s, box-shadow .25s;
+}
+.area:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(20, 24, 22, .08); }
+.area .ico { width: 48px; height: 48px; border-radius: 14px; background: var(--paper-2); display: grid; place-items: center; flex: none; }
+.area b { font-size: 19px; display: block; }
+.area small { color: var(--ink-soft); font-size: 14px; }
+.area[aria-pressed="true"] { border-color: var(--ink); transform: translateY(-2px); }
+.area[aria-pressed="true"] .ico { background: var(--ink); color: var(--paper); }
+
+/* Muestras de pintura */
+.chips { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.chip {
+  position: relative; text-align: left; padding: 0; border: 0; border-radius: 18px; overflow: hidden;
+  background: var(--card); box-shadow: 0 6px 16px rgba(20, 24, 22, .10);
+  transition: transform .35s var(--ease), box-shadow .35s var(--ease);
+}
+.chip .field { display: block; height: 112px; background: var(--c); position: relative; }
+.chip .field::after { content: ""; position: absolute; inset: 0; background: linear-gradient(160deg, rgba(255,255,255,.22), rgba(255,255,255,0) 45%); }
+.chip .meta { display: flex; flex-direction: column; gap: 2px; padding: 12px 14px 14px; }
+.chip .code { font-size: 11px; font-weight: 700; letter-spacing: .1em; color: var(--ink-soft); }
+.chip .name { font-family: var(--display); font-weight: 700; font-size: 21px; line-height: 1.1; }
+.chip .emo { font-size: 15px; color: var(--ink-soft); }
+.chip .check {
+  position: absolute; top: 10px; right: 10px; width: 34px; height: 34px; border-radius: 50%;
+  background: var(--card); color: var(--ink); display: grid; place-items: center;
+  transform: scale(0); transition: transform .35s var(--ease);
+}
+.chip:hover { transform: translateY(-4px) rotate(-1deg); box-shadow: 0 14px 28px rgba(20, 24, 22, .16); }
+.chip[aria-pressed="true"] { transform: translateY(-8px) rotate(-2deg) scale(1.03); box-shadow: 0 18px 34px rgba(20, 24, 22, .22), 0 0 0 3px var(--ink); }
+.chip[aria-pressed="true"] .check { transform: scale(1); }
+.chips.has-pick .chip:not([aria-pressed="true"]) { opacity: .55; transform: scale(.97); }
+
+/* Preocupaciones */
+.preos { display: grid; gap: 10px; }
+.preo {
+  display: flex; align-items: center; gap: 14px; width: 100%; text-align: left;
+  background: var(--card); border: 2px solid transparent; border-radius: 16px; padding: 14px 16px;
+  box-shadow: 0 2px 0 var(--line); font-weight: 600; font-size: 17px;
+  transition: transform .25s var(--ease), border-color .2s;
+}
+.preo .letter { width: 32px; height: 32px; border-radius: 10px; background: var(--paper-2); display: grid; place-items: center; font-weight: 700; font-size: 14px; flex: none; transition: background .2s, color .2s; }
+.preo:hover { transform: translateX(3px); }
+.preo[aria-pressed="true"] { border-color: var(--ink); }
+.preo[aria-pressed="true"] .letter { background: var(--tint); color: var(--on, #fff); }
+
+/* Tarjeta de lectura: una muestra grande */
+.sample { border-radius: 26px; overflow: hidden; background: var(--card); box-shadow: 0 16px 40px rgba(20, 24, 22, .16); animation: unfold .7s var(--ease) both; }
+@keyframes unfold { from { opacity: 0; transform: translateY(30px) rotate(-3deg) scale(.94); } to { opacity: 1; transform: none; } }
+.sample-head { background: var(--tint); color: var(--on, #fff); padding: 22px 22px 26px; position: relative; overflow: hidden; }
+.sample-head::after { content: ""; position: absolute; width: 260px; height: 260px; right: -90px; top: -110px; border-radius: 50%; background: rgba(255,255,255,.14); }
+.sample-head .code { font-size: 12px; font-weight: 700; letter-spacing: .14em; opacity: .85; }
+.sample-head h2 { font-size: clamp(38px, 11vw, 52px); font-weight: 800; margin-top: 8px; }
+.sample-head p { font-size: 17px; margin-top: 6px; opacity: .92; font-weight: 500; }
+.sample-body { padding: 20px 22px 24px; display: grid; gap: 16px; }
+.block { display: grid; grid-template-columns: 36px 1fr; gap: 12px; align-items: start; }
+.block .ico { width: 36px; height: 36px; border-radius: 11px; background: var(--paper-2); display: grid; place-items: center; }
+.block h3 { font-family: var(--body); font-size: 13px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-soft); letter-spacing: .08em; }
+.block p { margin-top: 3px; }
+.ask { background: color-mix(in srgb, var(--tint) 16%, var(--card)); border-radius: 18px; padding: 16px 18px; }
+.ask h3 { font-family: var(--body); font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft); }
+.ask p { font-family: var(--display); font-size: 22px; font-weight: 700; line-height: 1.2; margin-top: 6px; }
+
+.burst { position: relative; height: 0; }
+.burst i { position: absolute; left: 50%; top: 0; width: 12px; height: 12px; border-radius: 50%; background: var(--c); animation: burst 1.1s var(--ease) both; animation-delay: var(--d); }
+@keyframes burst { from { transform: translate(-50%, 0) scale(0); opacity: 1; } to { transform: translate(calc(-50% + var(--x)), var(--y)) scale(1); opacity: 0; } }
+
+.closing { font-size: 15px; color: var(--ink-soft); line-height: 1.5; }
+.motto { font-family: var(--display); font-size: 26px; font-weight: 800; line-height: 1.1; }
+.motto span { display: block; }
+.motto span:nth-child(2) { color: var(--ink-soft); }
+.status { font-size: 14px; color: var(--ink-soft); display: flex; align-items: center; gap: 8px; }
+.status::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--st, var(--line)); }
+
+/* ===================== RESULTADOS (proyección) ===================== */
+#resultados {
+  --bg: #121513; --panel: #1B201D; --panel-2: #252B27; --fg: #F2F3EF; --fg-soft: #A9B0A9; --rule: #2E3531;
+  background: var(--bg); color: var(--fg); min-height: 100vh; color-scheme: dark;
+  padding-left: max(28px, env(safe-area-inset-left, 0px));
+  padding-right: max(28px, env(safe-area-inset-right, 0px));
+  padding-block: 28px 32px;
+}
+.board { max-width: 1560px; margin: 0 auto; display: flex; flex-direction: column; gap: 22px; }
+.b-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 20px; }
+.b-head .kicker { color: var(--fg-soft); }
+.b-head h1 { font-size: clamp(34px, 3.6vw, 60px); font-weight: 800; margin-top: 6px; }
+.b-count { display: flex; align-items: baseline; gap: 10px; font-variant-numeric: tabular-nums; }
+.b-count b { font-family: var(--display); font-size: clamp(56px, 5vw, 84px); line-height: 1; font-weight: 800; }
+.b-count span { color: var(--fg-soft); font-size: 18px; }
+.live { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; color: var(--fg-soft); }
+.live i { width: 10px; height: 10px; border-radius: 50%; background: #3BD37A; box-shadow: 0 0 0 0 rgba(59, 211, 122, .6); animation: pulse 1.8s infinite; }
+@keyframes pulse { to { box-shadow: 0 0 0 12px rgba(59, 211, 122, 0); } }
+.demo-tag { font-size: 13px; font-weight: 700; padding: 5px 12px; border-radius: 999px; background: var(--c-amarillo); color: #1C1F1D; }
+.b-tools { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.b-tool { background: var(--panel); border: 1px solid var(--rule); color: var(--fg); border-radius: 999px; padding: 8px 16px; font-size: 14px; cursor: pointer; }
+.b-tool:hover { background: var(--panel-2); }
+.b-sync { font-size: 13px; color: var(--fg-soft); }
+
+.b-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 18px; }
+.panel { background: var(--panel); border-radius: 22px; padding: 24px; min-width: 0; display: flex; flex-direction: column; gap: 18px; }
+.panel h2 { font-size: 22px; font-weight: 700; letter-spacing: -0.01em; }
+.panel .sub { color: var(--fg-soft); font-size: 14px; margin-top: -10px; }
+.s-7 { grid-column: span 7; } .s-5 { grid-column: span 5; } .s-6 { grid-column: span 6; } .s-12 { grid-column: span 12; }
+@media (max-width: 1000px) { .s-7, .s-5, .s-6 { grid-column: span 12; } }
+
+/* Mosaico */
+.mosaic { display: grid; grid-template-columns: repeat(auto-fill, minmax(56px, 1fr)); gap: 10px; align-content: start; min-height: 260px; }
+.tile { aspect-ratio: 3 / 4; border-radius: 10px; background: var(--c); position: relative; overflow: hidden; box-shadow: inset 0 -14px 0 rgba(0,0,0,.18); }
+.tile::after { content: ""; position: absolute; inset: 0; background: linear-gradient(160deg, rgba(255,255,255,.25), rgba(255,255,255,0) 50%); }
+.tile.new { animation: pop .7s var(--ease) both; animation-delay: var(--d, 0s); }
+@keyframes pop { from { transform: scale(0) rotate(-20deg); opacity: 0; } to { transform: none; opacity: 1; } }
+.mosaic-legend { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 14px; color: var(--fg-soft); }
+.mosaic-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.mosaic-legend i { width: 12px; height: 16px; border-radius: 3px; background: var(--c); }
+
+/* Posturas */
+.postures { display: grid; gap: 14px; }
+.posture { display: grid; grid-template-columns: 1fr auto; gap: 4px 16px; align-items: end; padding: 16px 18px; border-radius: 16px; background: var(--panel-2); position: relative; overflow: hidden; }
+.posture .fill { position: absolute; inset: 0 auto 0 0; background: var(--g); opacity: .22; transition: width .9s var(--ease); }
+.posture b { font-family: var(--display); font-size: 26px; position: relative; }
+.posture em { font-style: normal; font-family: var(--display); font-weight: 800; font-size: 52px; line-height: .9; position: relative; font-variant-numeric: tabular-nums; color: var(--g); grid-row: span 2; align-self: center; }
+.posture small { color: var(--fg-soft); font-size: 14px; position: relative; }
+
+/* Lecturas */
+.insights { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+@media (max-width: 1000px) { .insights { grid-template-columns: 1fr; } }
+.insight { background: var(--panel); border-radius: 22px; padding: 22px 24px 24px; font-size: 20px; line-height: 1.4; position: relative; }
+.insight .n { font-family: var(--display); font-weight: 800; font-size: 15px; color: var(--bg); background: var(--fg); width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; margin-bottom: 12px; }
+.insight b { color: #FFD66B; font-weight: 700; }
+
+/* Barras */
+.bars { display: grid; gap: 12px; }
+.bar { display: grid; grid-template-columns: minmax(120px, 34%) 1fr 52px; gap: 12px; align-items: center; }
+.bar .lab { font-weight: 600; font-size: 16px; display: flex; align-items: center; gap: 8px; min-width: 0; }
+.bar .lab i { width: 10px; height: 14px; border-radius: 3px; background: var(--c); flex: none; }
+.track { height: 26px; background: var(--panel-2); border-radius: 8px; overflow: hidden; }
+.track div { height: 100%; border-radius: 8px; background: var(--c); transition: width .9s var(--ease); }
+.bar .v { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
+.area-row { display: grid; grid-template-columns: minmax(130px, 22%) 1fr 44px; gap: 14px; align-items: center; }
+.area-row .lab { font-weight: 600; }
+.stack { display: flex; gap: 3px; height: 38px; }
+.stack div { border-radius: 6px; background: var(--c); transition: flex-basis .9s var(--ease); min-width: 0; }
+.area-row .v { text-align: right; color: var(--fg-soft); font-size: 14px; font-variant-numeric: tabular-nums; }
+.area-row .muted { color: var(--fg-soft); font-size: 14px; }
+.b-empty { background: var(--panel); border-radius: 22px; padding: 70px 24px; text-align: center; display: grid; gap: 14px; justify-items: center; }
+.b-empty .fan { width: 260px; height: 190px; }
+.b-empty .fan .chip-mini { width: 70px; height: 160px; }
+.b-empty p { color: var(--fg-soft); font-size: 20px; max-width: 32ch; }
+.b-foot { font-size: 13px; color: var(--fg-soft); }
+
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+
+<!-- ===================== PARTICIPANTE ===================== -->
+<main id="participante">
+  <div class="topbar">
+    <div class="brand"><span class="brand-chips" aria-hidden="true"><i style="background:var(--c-verde)"></i><i style="background:var(--c-amarillo)"></i><i style="background:var(--c-azul)"></i><i style="background:var(--c-naranja)"></i><i style="background:var(--c-rojo)"></i></span>Termómetro de colores</div>
+    <div class="dots" id="dots" aria-hidden="true"><span></span><span></span><span></span></div>
+  </div>
+
+  <section class="step" data-step="0">
+    <div class="fan" aria-hidden="true" id="fan"></div>
+    <p class="kicker">Antes de hablar de IA</p>
+    <h1>¿De qué color es lo que sientes frente a la IA?</h1>
+    <p class="lead">Elige tu muestra, como en una carta de colores. Toma un minuto y al final te llevas una lectura hecha para tu color.</p>
+    <p class="privacy"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Es anónimo: no pedimos tu nombre ni datos que te identifiquen.</p>
+    <button class="cta" data-next>Elegir mi color <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+  </section>
+
+  <section class="step" data-step="1" hidden>
+    <p class="kicker">1 de 3</p>
+    <h1>¿Desde dónde miras la organización?</h1>
+    <div class="areas" id="opts-area" role="group" aria-label="Área"></div>
+    <button class="cta" data-next disabled id="next-area">Continuar <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+  </section>
+
+  <section class="step" data-step="2" hidden>
+    <p class="kicker">2 de 3</p>
+    <h1>Cuando piensas en la IA en tu trabajo, ¿qué muestra eliges?</h1>
+    <div class="chips" id="opts-color" role="group" aria-label="Color"></div>
+    <button class="cta" disabled id="next-color">Ver mi lectura <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+  </section>
+
+  <section class="step" data-step="3" hidden>
+    <article class="sample" id="reading-color"></article>
+    <button class="cta" data-next>Una última pregunta <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+  </section>
+
+  <section class="step" data-step="4" hidden>
+    <p class="kicker">3 de 3</p>
+    <h1>¿Qué es lo que más te inquieta?</h1>
+    <p class="lead">Puedes elegir varias.</p>
+    <div class="preos" id="opts-preo" role="group" aria-label="Preocupaciones"></div>
+    <button class="cta" disabled id="send">Enviar y ver mi recomendación <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+  </section>
+
+  <section class="step" data-step="5" hidden>
+    <div class="burst" id="burst" aria-hidden="true"></div>
+    <article class="sample" id="reading-preo"></article>
+    <p class="motto"><span>La tecnología lo hace.</span><span>Las personas lo pensamos.</span><span>Y lo pensamos juntos.</span></p>
+    <p class="closing">Esta es una lectura general. En un proceso de transformación, estas posturas se escuchan y se trabajan con todo el equipo, porque el cambio es con todos.</p>
+    <p class="status" id="send-status"></p>
+    <button class="link" id="see-color">Volver a ver mi muestra</button>
+  </section>
+</main>
+
+<!-- ===================== RESULTADOS ===================== -->
+<main id="resultados" hidden>
+  <div class="board">
+    <header class="b-head">
+      <div>
+        <p class="kicker">Termómetro de colores · lectura institucional</p>
+        <h1>Así se siente este equipo frente a la IA</h1>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
+        <div class="b-count"><b id="total">0</b><span>muestras</span></div>
+        <div style="display:flex;gap:10px;align-items:center"><span class="demo-tag" id="demo-badge" hidden>Datos de ejemplo</span><span class="live" id="live" hidden><i></i>En vivo</span></div>
+      </div>
+    </header>
+
+    <div class="b-tools">
+      <button class="b-tool" id="btn-refresh">Actualizar</button>
+      <button class="b-tool" id="btn-demo">Ver con datos de ejemplo</button>
+      <button class="b-tool" id="btn-reset">Reiniciar contadores</button>
+      <button class="b-tool" id="btn-all" hidden>Ver todas las respuestas</button>
+      <label class="b-tool" for="csv">Cargar CSV de la hoja<input type="file" id="csv" accept=".csv,text/csv" hidden></label>
+      <span class="b-sync" id="sync"></span>
+    </div>
+
+    <div class="b-empty" id="board-empty">
+      <div class="fan" aria-hidden="true" id="fan-empty"></div>
+      <p>Esperando las primeras muestras. Cuando el equipo empiece a responder, aparecerán aquí solas.</p>
+    </div>
+
+    <div id="board-body" hidden style="display:flex;flex-direction:column;gap:18px">
+      <div class="b-grid">
+        <section class="panel s-7">
+          <h2>El mosaico del equipo</h2>
+          <p class="sub">Cada muestra es una persona.</p>
+          <div class="mosaic" id="mosaic" role="img" aria-label="Mosaico de respuestas"></div>
+          <div class="mosaic-legend" id="mosaic-legend"></div>
+        </section>
+        <section class="panel s-5">
+          <h2>Tres posturas frente a la tecnología</h2>
+          <div class="postures" id="postures"></div>
+        </section>
+      </div>
+
+      <div class="insights" id="insights"></div>
+
+      <div class="b-grid">
+        <section class="panel s-6"><h2>Los seis colores</h2><div class="bars" id="bars-color"></div></section>
+        <section class="panel s-6"><h2>Lo que más inquieta</h2><p class="sub">Porcentaje de personas que eligió cada una (se podían marcar varias).</p><div class="bars" id="bars-preo"></div></section>
+        <section class="panel s-12">
+          <h2>Colores por área</h2>
+          <p class="sub">Un área con menos de 3 respuestas no se desglosa, para cuidar el anonimato.</p>
+          <div class="bars" id="by-area"></div>
+        </section>
+      </div>
+    </div>
+    <p class="b-foot">Dinámica de conversación inspirada en el Mood Meter (Brackett, Yale Center for Emotional Intelligence), el Technology Readiness Index (Parasuraman y Colby, 2015) y la Difusión de innovaciones (Rogers, 2003). No es un test psicométrico.</p>
+  </div>
+</main>
+
+<script>
+/* ============================================================
+   CONFIGURACIÓN: pega aquí la URL de tu Apps Script (termina en /exec).
+   Si queda vacía, la página funciona en modo ensayo y no guarda respuestas.
+   ============================================================ */
+const ENDPOINT = "https://script.google.com/macros/s/AKfycbzVR14izFEBnqcF1PNm7Lu9OeWaoXH_Q91cddh2PE_VFZ1p7JDcHVu5OOsnQA_ocm3_/exec";
+const REFRESH_MS = 5000;
+
+const ICONS = {
+  compass: '<circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/>',
+  gear: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/>',
+  folder: '<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+  spark: '<path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6"/>',
+  tool: '<path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.5-.5-.5-2.5z"/>',
+  flag: '<path d="M5 21V4M5 4h11l-2 4 2 4H5"/>',
+  check: '<path d="m5 12 5 5 9-10"/>',
+};
+const icon = (name, size = 22) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name]}</svg>`;
+
+const AREAS = [
+  { key: "direccion", label: "Dirección y gestión", hint: "Rumbo, prioridades y decisiones", ico: "compass" },
+  { key: "operacion", label: "Operación", hint: "Proyectos, obra y territorio", ico: "gear" },
+  { key: "administrativo", label: "Administrativo", hint: "Procesos, reportes y soporte", ico: "folder" },
+];
+
+const COLORS = [
+  { key: "verde", code: "N.º 01", label: "Verde", emotion: "Entusiasmo", profile: "Impulsor/a", group: "apertura", css: "--c-verde", on: "#FFFFFF",
+    aporta: "Energía para arrancar. Cuando algo nuevo llega, tú eres de quienes se animan a probarlo primero.",
+    ayuda: "Probar ideas rápido: borradores de propuestas para convocatorias, resúmenes de reuniones con aliados o primeras versiones de informes que luego el equipo afina.",
+    reto: "Verificar antes de confiar, sobre todo cifras y datos técnicos, y compartir lo que aprendes para que otros se sumen.",
+    pregunta: "¿A quién del equipo le mostrarías algo que ya te funciona?" },
+  { key: "amarillo", code: "N.º 02", label: "Amarillo", emotion: "Curiosidad", profile: "Explorador/a", group: "apertura", css: "--c-amarillo", on: "#1C1F1D",
+    aporta: "Preguntas nuevas. Tu curiosidad abre puertas que otros todavía no ven.",
+    ayuda: "Explorar con poco riesgo: pedirle a la IA que te explique un tema técnico, que compare opciones o que ordene información dispersa de un proyecto.",
+    reto: "Elegir una sola tarea para empezar, en lugar de querer probarlo todo a la vez.",
+    pregunta: "¿Qué tarea de esta semana te gustaría hacer distinto?" },
+  { key: "azul", code: "N.º 03", label: "Azul", emotion: "Prudencia", profile: "Analista", group: "cautela", css: "--c-azul", on: "#FFFFFF",
+    aporta: "Rigor y criterio. Tu forma de preguntar «¿y esto funciona?» evita decisiones apresuradas.",
+    ayuda: "Tener mejores datos para decidir: indicadores de impacto, comparaciones entre proyectos y trazabilidad de lo que se entrega a cada aliado.",
+    reto: "Aceptar que también se aprende probando en pequeño, sin esperar a tener certeza total.",
+    pregunta: "¿Qué evidencia necesitarías para darle una oportunidad?" },
+  { key: "gris", code: "N.º 04", label: "Gris", emotion: "Indiferencia", profile: "Escéptico/a", group: "cautela", css: "--c-gris", on: "#FFFFFF",
+    aporta: "Realismo. Tu mirada ayuda a separar lo que de verdad sirve de lo que solo está de moda.",
+    ayuda: "La tecnología solo tiene sentido si resuelve algo concreto de tu trabajo. Empezar por una tarea tediosa puede mostrarte si vale la pena.",
+    reto: "Identificar una tarea repetitiva que nadie extrañaría si desapareciera.",
+    pregunta: "¿Qué parte de tu trabajo te gustaría que fuera más simple?" },
+  { key: "naranja", code: "N.º 05", label: "Naranja", emotion: "Agobio", profile: "Saturado/a", group: "tension", css: "--c-naranja", on: "#FFFFFF",
+    aporta: "Claridad sobre la carga real. Sabes mejor que nadie cuánto pesa el día a día.",
+    ayuda: "Bien elegida, la tecnología debería quitarte trabajo, no sumarte: formatos, reportes, búsqueda de documentos y tareas que se repiten cada mes.",
+    reto: "Que aprender no sea una tarea más, sino algo acompañado y dentro del tiempo de trabajo.",
+    pregunta: "¿Qué tarea te quita más tiempo y te deja menos satisfacción?" },
+  { key: "rojo", code: "N.º 06", label: "Rojo", emotion: "Temor", profile: "Guardián/a", group: "tension", css: "--c-rojo", on: "#FFFFFF",
+    aporta: "Cuidado y responsabilidad. Tus preguntas sobre datos, errores y personas protegen a la organización.",
+    ayuda: "La tecnología puede usarse con reglas claras sobre qué información se comparte y quién revisa lo que produce. Esas reglas dan tranquilidad.",
+    reto: "Que tu cuidado se convierta en acuerdos para el equipo y no en un freno.",
+    pregunta: "¿Qué tendría que cumplirse para que te sintieras tranquilo o tranquila usándola?" },
+];
+
+const PREOS = [
+  { key: "rol", label: "Que se pierda el valor de mi rol", short: "El valor de mi rol",
+    title: "Tu experiencia no se automatiza",
+    text: "La IA hace tareas, no ocupa roles. Lo que sabes de tus proyectos, de los aliados y del territorio no lo reemplaza ninguna herramienta. Liberar tiempo de lo repetitivo puede darte más espacio justamente para eso." },
+  { key: "error", label: "Equivocarme o no saber usarla", short: "Equivocarme",
+    title: "Aprender también es equivocarse",
+    text: "Nadie nace sabiendo usar una herramienta nueva. Equivocarse en pequeño, en tareas de bajo riesgo y con compañía, es parte de aprender. Nadie debería aprender solo." },
+  { key: "datos", label: "La confidencialidad de la información", short: "Confidencialidad",
+    title: "Tu preocupación es necesaria",
+    text: "Es una preocupación legítima. Usar IA con responsabilidad empieza por acuerdos claros sobre qué información se puede compartir y en qué herramientas. Tu mirada ayuda a construir esos acuerdos." },
+  { key: "sirva", label: "Que no sirva para nuestro trabajo real", short: "Que no sirva",
+    title: "Exigir que sirva es lo correcto",
+    text: "Tienes razón en pedirlo. La tecnología debe partir de las tareas reales del equipo, no al revés. Si no libera tiempo para lo que importa, es un costo, no una mejora." },
+  { key: "tiempo", label: "No tener tiempo para aprender", short: "Falta de tiempo",
+    title: "Si aprender pesa, algo está mal planteado",
+    text: "Los cambios que funcionan empiezan pequeños y liberan tiempo antes de pedirlo. Aprender debería ser acompañado y dentro del trabajo, no una carga extra." },
+  { key: "nada", label: "Nada me preocupa", short: "Nada",
+    title: "Tu tranquilidad suma",
+    text: "Tu confianza puede animar a otros. Ayúdanos también a mirar los riesgos: la confianza crece cuando la tecnología se usa bien y con acuerdos." },
+];
+
+const GROUPS = [
+  { key: "apertura", label: "Apertura", colors: "Verde y amarillo", css: "--g-apertura", meaning: "Con ganas de probar y explorar" },
+  { key: "cautela", label: "Cautela", colors: "Azul y gris", css: "--g-cautela", meaning: "Necesitan ver sentido y evidencia" },
+  { key: "tension", label: "Tensión", colors: "Naranja y rojo", css: "--g-tension", meaning: "Con carga o temores que hay que escuchar" },
+];
+
+const byKey = (list, k) => list.find(x => x.key === k);
+const byLabel = (list, l) => {
+  const v = String(l || "").trim().toLowerCase();
+  return list.find(x => x.label.toLowerCase() === v || x.key === v || (x.short && x.short.toLowerCase() === v));
+};
+const el = (tag, attrs = {}, ...kids) => {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === "style") n.style.cssText = v;
+    else if (k === "text") n.textContent = v;
+    else if (k === "html") n.innerHTML = v;
+    else n.setAttribute(k, v);
+  }
+  kids.forEach(c => n.append(c));
+  return n;
+};
+const fan = (box) => {
+  const n = COLORS.length;
+  COLORS.forEach((c, i) => {
+    const r = (i - (n - 1) / 2) * 13;
+    box.append(el("div", { class: "chip-mini", style: `--c:var(${c.css});--r:${r}deg;--d:${i * 70}ms` }, el("span", { text: c.code })));
+  });
+};
+fan(document.getElementById("fan"));
+fan(document.getElementById("fan-empty"));
+
+/* ---------------- Participante ---------------- */
+const answer = { area: null, color: null, preo: null };
+const steps = [...document.querySelectorAll("#participante .step")];
+const dots = [...document.querySelectorAll("#dots span")];
+let current = 0;
+function go(i) {
+  steps[current].hidden = true;
+  current = i;
+  steps[current].hidden = false;
+  const lit = { 0: 0, 1: 1, 2: 2, 3: 2, 4: 3, 5: 3 }[i];
+  dots.forEach((d, k) => d.classList.toggle("on", k < lit));
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+document.querySelectorAll("[data-next]").forEach(b => b.addEventListener("click", () => go(current + 1)));
+
+function setTint(c) {
+  document.documentElement.style.setProperty("--tint", `var(${c.css})`);
+  document.documentElement.style.setProperty("--on", c.on);
+}
+
+function choice(container, items, field, nextBtn, render) {
+  items.forEach(item => {
+    const b = render(item);
+    b.type = "button";
+    b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", () => {
+      container.querySelectorAll("[aria-pressed]").forEach(o => o.setAttribute("aria-pressed", "false"));
+      b.setAttribute("aria-pressed", "true");
+      container.classList.add("has-pick");
+      answer[field] = item.key;
+      if (field === "color") setTint(item);
+      nextBtn.disabled = false;
+    });
+    container.append(b);
+  });
+}
+choice(document.getElementById("opts-area"), AREAS, "area", document.getElementById("next-area"),
+  a => el("button", { class: "area" },
+    el("span", { class: "ico", html: icon(a.ico) }),
+    el("span", {}, el("b", { text: a.label }), el("small", { text: a.hint }))));
+choice(document.getElementById("opts-color"), COLORS, "color", document.getElementById("next-color"),
+  c => el("button", { class: "chip", style: `--c:var(${c.css})`, "aria-label": `${c.label}, ${c.emotion}` },
+    el("span", { class: "field" }),
+    el("span", { class: "check", html: icon("check", 18) }),
+    el("span", { class: "meta" },
+      el("span", { class: "code", text: c.code }),
+      el("span", { class: "name", text: c.label }),
+      el("span", { class: "emo", text: c.emotion }))));
+// Preocupaciones: selección múltiple; «Nada me preocupa» excluye las demás
+answer.preo = [];
+const preoBox = document.getElementById("opts-preo");
+PREOS.forEach((p, i) => {
+  const b = el("button", { class: "preo", type: "button", "aria-pressed": "false", "data-key": p.key },
+    el("span", { class: "letter", text: "ABCDEF"[i] }), el("span", { text: p.label }));
+  b.addEventListener("click", () => {
+    let sel = new Set(answer.preo);
+    if (sel.has(p.key)) sel.delete(p.key);
+    else if (p.key === "nada") sel = new Set(["nada"]);
+    else { sel.delete("nada"); sel.add(p.key); }
+    answer.preo = PREOS.map(x => x.key).filter(k => sel.has(k));
+    preoBox.querySelectorAll(".preo").forEach(o => o.setAttribute("aria-pressed", String(sel.has(o.dataset.key))));
+    document.getElementById("send").disabled = answer.preo.length === 0;
+  });
+  preoBox.append(b);
+});
+
+document.getElementById("next-color").addEventListener("click", () => {
+  const c = byKey(COLORS, answer.color);
+  const block = (ico, title, text) => el("div", { class: "block" }, el("span", { class: "ico", html: icon(ico, 18) }), el("div", {}, el("h3", { text: title }), el("p", { text })));
+  document.getElementById("reading-color").replaceChildren(
+    el("div", { class: "sample-head" },
+      el("p", { class: "code", text: `${c.code} · ${c.label.toUpperCase()} · ${c.emotion.toUpperCase()}` }),
+      el("h2", { text: c.profile }),
+      el("p", { text: c.aporta })),
+    el("div", { class: "sample-body" },
+      block("tool", "Cómo puede ayudarte la tecnología", c.ayuda),
+      block("flag", "Tu reto", c.reto),
+      el("div", { class: "ask" }, el("h3", { text: "Una pregunta para ti" }), el("p", { text: c.pregunta }))));
+  go(3);
+});
+
+function burst() {
+  const box = document.getElementById("burst");
+  box.replaceChildren();
+  for (let i = 0; i < 18; i++) {
+    const a = (i / 18) * Math.PI * 2, d = 90 + Math.random() * 70;
+    box.append(el("i", { style: `--c:var(${COLORS[i % 6].css});--x:${Math.cos(a) * d}px;--y:${Math.sin(a) * d + 40}px;--d:${Math.random() * 120}ms` }));
+  }
+}
+
+document.getElementById("send").addEventListener("click", async () => {
+  const picks = answer.preo.map(k => byKey(PREOS, k));
+  const c = byKey(COLORS, answer.color);
+  const single = picks.length === 1;
+  document.getElementById("reading-preo").replaceChildren(
+    el("div", { class: "sample-head" },
+      el("p", { class: "code", text: single ? `PARA LLEVARTE · ${picks[0].short.toUpperCase()}` : `PARA LLEVARTE · ${picks.length} INQUIETUDES` }),
+      el("h2", { text: single ? picks[0].title : "Lo que te inquieta tiene respuesta", style: "font-size:clamp(30px,8.5vw,40px)" })),
+    el("div", { class: "sample-body" }, ...(single
+      ? [el("p", { text: picks[0].text })]
+      : picks.map(p => el("div", { class: "block" }, el("span", { class: "ico", html: icon("check", 18) }),
+          el("div", {}, el("h3", { text: p.short }), el("p", { style: "font-weight:700;margin-top:4px", text: p.title }), el("p", { text: p.text })))))));
+  go(5);
+  burst();
+  const status = document.getElementById("send-status");
+  const say = (msg, color) => { status.textContent = msg; status.style.setProperty("--st", color); };
+  if (!ENDPOINT) { say("Modo ensayo: esta respuesta no se guardó.", "var(--c-gris)"); return; }
+  // Para pruebas: abrir la página con ?nuevo permite volver a enviar desde el mismo celular.
+  if (new URLSearchParams(location.search).has("nuevo")) { try { localStorage.removeItem("termometro-enviado"); } catch (e) {} }
+  let sent = false;
+  try { sent = localStorage.getItem("termometro-enviado") === "1"; } catch (e) {}
+  if (sent) { say("Ya habíamos recibido tu muestra desde este celular. ¡Gracias!", "var(--c-verde)"); return; }
+  say("Enviando tu muestra…", "var(--c-amarillo)");
+  try {
+    await fetch(ENDPOINT, {
+      method: "POST", mode: "no-cors",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ area: byKey(AREAS, answer.area).label, color: c.label, preocupacion: picks.map(p => p.label).join(" | ") }),
+    });
+    try { localStorage.setItem("termometro-enviado", "1"); } catch (e) {}
+    say("Tu muestra ya está en el mosaico del equipo. ¡Gracias!", "var(--c-verde)");
+  } catch (e) {
+    say("No pudimos enviar tu muestra. Revisa tu conexión.", "var(--c-rojo)");
+    const retry = el("button", { class: "link", type: "button", text: "Reintentar envío" });
+    retry.addEventListener("click", () => { retry.remove(); document.getElementById("send").click(); });
+    status.after(retry);
+  }
+});
+document.getElementById("see-color").addEventListener("click", () => go(3));
+
+/* ---------------- Resultados ---------------- */
+let rows = [];
+let demo = false;
+let timer = null;
+let shown = 0;
+let raw = [];
+// Reinicio de contadores: solo se muestran respuestas posteriores al reinicio.
+// ts = hora de la última respuesta (reloj de Google); n = filas que había, por si alguna fila llega sin hora.
+let since = null;
+try { since = JSON.parse(localStorage.getItem("termometro-desde") || "null"); } catch (e) {}
+if (!since || typeof since !== "object") since = null;
+const isNew = (r, i) => !since || (r.ts ? r.ts > since.ts : i >= since.n);
+
+function normalize(list) {
+  return list.map(r => ({
+    area: byLabel(AREAS, r.area)?.key,
+    color: byLabel(COLORS, r.color)?.key,
+    preos: String(r.preocupacion ?? r.preo ?? "").split("|").map(s => byLabel(PREOS, s)?.key).filter(Boolean),
+  })).filter(r => r.color);
+}
+
+async function load() {
+  if (demo || !ENDPOINT) return;
+  const sync = document.getElementById("sync");
+  try {
+    const res = await fetch(ENDPOINT + "?t=" + Date.now());
+    const data = await res.json();
+    raw = data.rows || [];
+    rows = normalize(raw.filter(isNew));
+    sync.textContent = "Actualizado " + new Date().toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit", second: "2-digit" })
+      + (since ? " · contando desde las " + new Date(since.at).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" }) : "");
+    render();
+  } catch (e) {
+    sync.textContent = "No se pudo leer la hoja. Puedes cargar el CSV a mano.";
+  }
+}
+
+function count(list, field, keys) {
+  const m = Object.fromEntries(keys.map(k => [k, 0]));
+  list.forEach(r => { if (r[field] in m) m[r[field]]++; });
+  return m;
+}
+const pct = (n, t) => t ? Math.round(n * 100 / t) : 0;
+
+function bars(container, items, counts, total) {
+  const max = Math.max(1, ...Object.values(counts));
+  container.replaceChildren(...items.map(it => {
+    const n = counts[it.key] || 0;
+    return el("div", { class: "bar", style: `--c:${it.fill}` },
+      el("span", { class: "lab" }, el("i"), el("span", { text: it.name })),
+      el("div", { class: "track" }, el("div", { style: `width:${(n / max) * 100}%` })),
+      el("span", { class: "v", text: `${pct(n, total)}%` }));
+  }));
+}
+
+function render() {
+  const total = rows.length;
+  document.getElementById("total").textContent = total;
+  document.getElementById("demo-badge").hidden = !demo;
+  document.getElementById("live").hidden = demo || !ENDPOINT;
+  document.getElementById("board-empty").hidden = total > 0;
+  document.getElementById("board-body").hidden = total === 0;
+  if (!total) { shown = 0; return; }
+
+  const cColor = count(rows, "color", COLORS.map(c => c.key));
+  // Cada persona puede marcar varias: se cuenta cuántas personas eligieron cada una
+  const cPreo = Object.fromEntries(PREOS.map(p => [p.key, 0]));
+  rows.forEach(r => r.preos.forEach(k => cPreo[k]++));
+  const cGroup = Object.fromEntries(GROUPS.map(g => [g.key, 0]));
+  rows.forEach(r => cGroup[byKey(COLORS, r.color).group]++);
+
+  // Mosaico: ordenado por color; las muestras nuevas entran con animación
+  const order = COLORS.map(c => c.key);
+  const sorted = [...rows].sort((a, b) => order.indexOf(a.color) - order.indexOf(b.color));
+  const fresh = total > shown;
+  document.getElementById("mosaic").replaceChildren(...sorted.map((r, i) =>
+    el("div", { class: "tile" + (fresh ? " new" : ""), style: `--c:var(${byKey(COLORS, r.color).css});--d:${fresh ? Math.min(i * 25, 900) : 0}ms` })));
+  shown = total;
+  document.getElementById("mosaic-legend").replaceChildren(...COLORS.map(c =>
+    el("span", { style: `--c:var(${c.css})` }, el("i"), document.createTextNode(`${c.label} · ${c.emotion}`))));
+
+  document.getElementById("postures").replaceChildren(...GROUPS.map(g =>
+    el("div", { class: "posture", style: `--g:var(${g.css})` },
+      el("span", { class: "fill", style: `width:${pct(cGroup[g.key], total)}%` }),
+      el("b", { text: g.label }),
+      el("em", { text: `${pct(cGroup[g.key], total)}%` }),
+      el("small", { text: `${g.colors} · ${g.meaning}` }))));
+
+  bars(document.getElementById("bars-color"), COLORS.map(c => ({ key: c.key, name: `${c.label} · ${c.emotion}`, fill: `var(${c.css})` })), cColor, total);
+  bars(document.getElementById("bars-preo"), PREOS.map(p => ({ key: p.key, name: p.short, fill: "#F0A27F" })), cPreo, total);
+
+  document.getElementById("by-area").replaceChildren(...AREAS.map(a => {
+    const sub = rows.filter(r => r.area === a.key);
+    if (sub.length < 3) return el("div", { class: "area-row" },
+      el("span", { class: "lab", text: a.label }),
+      el("span", { class: "muted", text: sub.length ? "Menos de 3 respuestas: no se desglosa." : "Sin respuestas." }),
+      el("span", { class: "v", text: sub.length }));
+    const cc = count(sub, "color", order);
+    return el("div", { class: "area-row" },
+      el("span", { class: "lab", text: a.label }),
+      el("div", { class: "stack", role: "img", "aria-label": COLORS.map(c => `${c.label} ${pct(cc[c.key], sub.length)}%`).join(", ") },
+        ...COLORS.filter(c => cc[c.key]).map(c => el("div", { style: `flex:${cc[c.key]} 1 0;--c:var(${c.css})`, title: `${c.label}: ${cc[c.key]}` }))),
+      el("span", { class: "v", text: sub.length }));
+  }));
+
+  // Lecturas automáticas
+  const ins = [];
+  const topG = [...GROUPS].sort((a, b) => cGroup[b.key] - cGroup[a.key])[0];
+  const topC = [...COLORS].sort((a, b) => cColor[b.key] - cColor[a.key])[0];
+  ins.push(`La postura más presente es la <b>${topG.label}</b> (${pct(cGroup[topG.key], total)}%), y la muestra más elegida es el <b>${topC.label.toLowerCase()}</b>: ${topC.emotion.toLowerCase()}.`);
+  const topP = [...PREOS].filter(p => p.key !== "nada").sort((a, b) => cPreo[b.key] - cPreo[a.key])[0];
+  if (topP && cPreo[topP.key]) ins.push(`Lo que más inquieta es <b>«${topP.label.toLowerCase()}»</b>: lo eligieron ${cPreo[topP.key]} de ${total} personas.`);
+  const distinct = COLORS.filter(c => cColor[c.key]).length;
+  const areaShares = AREAS.map(a => {
+    const sub = rows.filter(r => r.area === a.key);
+    return { a, n: sub.length, share: sub.length ? sub.filter(r => byKey(COLORS, r.color).group === "tension").length / sub.length : 0 };
+  }).filter(x => x.n >= 3).sort((x, y) => y.share - x.share);
+  if (areaShares.length >= 2 && areaShares[0].share - areaShares[areaShares.length - 1].share >= 0.25) {
+    const hi = areaShares[0], lo = areaShares[areaShares.length - 1];
+    ins.push(`La tensión no se vive igual en todas las áreas: es mayor en <b>${hi.a.label}</b> (${Math.round(hi.share * 100)}%) que en <b>${lo.a.label}</b> (${Math.round(lo.share * 100)}%).`);
+  } else {
+    ins.push(`En este equipo aparecen <b>${distinct} de los 6 colores</b>. Hay ${distinct >= 4 ? "muchas" : "varias"} formas de vivir la tecnología, y todas tienen que caber en el proceso.`);
+  }
+  document.getElementById("insights").replaceChildren(...ins.map((h, i) =>
+    el("div", { class: "insight" }, el("span", { class: "n", text: i + 1 }), el("p", { html: h }))));
+}
+
+function demoRows() {
+  const pick = (arr, w) => { let r = Math.random() * w.reduce((a, b) => a + b, 0); for (let i = 0; i < arr.length; i++) { if ((r -= w[i]) < 0) return arr[i]; } return arr[0]; };
+  return Array.from({ length: 24 }, () => {
+    const set = new Set([pick(PREOS, [3, 4, 5, 3, 6, 1]).key]);
+    if (!set.has("nada") && Math.random() < 0.5) set.add(pick(PREOS.slice(0, 5), [3, 4, 5, 3, 6]).key);
+    return {
+      area: pick(AREAS, [5, 11, 8]).label,
+      color: pick(COLORS, [4, 5, 4, 3, 5, 3]).label,
+      preocupacion: PREOS.filter(p => set.has(p.key)).map(p => p.label).join(" | "),
+    };
+  });
+}
+
+function parseCSV(text) {
+  const lines = text.replace(/\r/g, "").split("\n").filter(Boolean);
+  const split = l => { const out = []; let cur = "", q = false; for (const ch of l) { if (ch === '"') q = !q; else if ((ch === "," || ch === ";") && !q) { out.push(cur); cur = ""; } else cur += ch; } out.push(cur); return out.map(s => s.trim()); };
+  const head = split(lines[0]).map(h => h.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, ""));
+  const idx = name => head.findIndex(h => h.includes(name));
+  const ia = idx("area"), ic = idx("color"), ip = idx("preocup");
+  return lines.slice(1).map(l => { const c = split(l); return { area: c[ia], color: c[ic], preocupacion: c[ip] }; });
+}
+
+function startBoard() {
+  document.getElementById("participante").hidden = true;
+  document.getElementById("resultados").hidden = false;
+  document.body.style.background = "#121513";
+  document.title = "Termómetro · resultados";
+  render();
+  load();
+  clearInterval(timer);
+  if (ENDPOINT) timer = setInterval(load, REFRESH_MS);
+  else document.getElementById("sync").textContent = "Sin conexión a la hoja configurada: usa datos de ejemplo o carga un CSV.";
+}
+document.getElementById("btn-refresh").addEventListener("click", () => { demo = false; load(); render(); });
+document.getElementById("btn-demo").addEventListener("click", () => {
+  demo = !demo; rows = demo ? normalize(demoRows()) : []; shown = 0;
+  document.getElementById("btn-demo").textContent = demo ? "Volver a datos reales" : "Ver con datos de ejemplo";
+  render(); if (!demo) load();
+});
+function setSince(value) {
+  since = value;
+  try { since ? localStorage.setItem("termometro-desde", JSON.stringify(since)) : localStorage.removeItem("termometro-desde"); } catch (e) {}
+  document.getElementById("btn-all").hidden = !since;
+}
+document.getElementById("btn-reset").addEventListener("click", async () => {
+  if (!confirm("¿Reiniciar los contadores? Las respuestas siguen guardadas en la hoja; el tablero solo mostrará las que lleguen desde ahora.")) return;
+  demo = false;
+  document.getElementById("btn-demo").textContent = "Ver con datos de ejemplo";
+  if (ENDPOINT) {
+    try { raw = (await (await fetch(ENDPOINT + "?t=" + Date.now())).json()).rows || raw; } catch (e) {}
+  }
+  // Se toma la hora de la última respuesta guardada (reloj de Google), no la del computador, para no perder ninguna nueva.
+  setSince({ ts: Math.max(0, ...raw.map(r => r.ts || 0)), n: raw.length, at: Date.now() });
+  rows = []; shown = 0;
+  render(); load();
+});
+document.getElementById("btn-all").addEventListener("click", () => { setSince(null); shown = 0; load(); });
+document.getElementById("btn-all").hidden = !since;
+document.getElementById("csv").addEventListener("change", e => {
+  const f = e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = () => { demo = false; clearInterval(timer); rows = normalize(parseCSV(String(r.result))); shown = 0; document.getElementById("sync").textContent = `CSV cargado: ${f.name}`; render(); };
+  r.readAsText(f, "utf-8");
+});
+
+function route() { if (location.hash === "#resultados") startBoard(); }
+window.addEventListener("hashchange", route);
+route();
+</script>
+</body>
+</html>
